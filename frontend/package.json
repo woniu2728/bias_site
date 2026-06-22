@@ -1,0 +1,26 @@
+{
+  "name": "bias-site-frontend",
+  "version": "0.1.0",
+  "description": "Bias Site Frontend - Vue 3 Application",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "predev": "npm run sync:sdk-aliases",
+    "build": "vite build",
+    "prebuild": "npm run sync:sdk-aliases",
+    "sync:sdk-aliases": "node ./scripts/syncSdkAliases.mjs"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.2.0",
+    "axios": "^1.6.7",
+    "dayjs": "^1.11.10",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.1.5"
+  }
+}
