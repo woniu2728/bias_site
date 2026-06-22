@@ -64,8 +64,17 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "bias_core.middleware.StartupStateMiddleware",
+    "bias_core.middleware.ExtensionErrorHandlingMiddleware",
+    "bias_core.middleware.ExtensionRuntimeInvalidationMiddleware",
+    "bias_core.middleware.ExtensionCsrfMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "bias_core.middleware.ExtensionThrottleApiMiddleware",
+    "bias_core.middleware.ExtensionRequestMiddleware",
+    "bias_core.middleware.QueryLoggingMiddleware",
+    "bias_core.middleware.MaintenanceModeMiddleware",
+    "bias_core.middleware.SecurityHeadersMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -75,9 +84,19 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
-        "APP_DIRS": True,
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": False,
         "OPTIONS": {
+            "loaders": [
+                (
+                    "django.template.loaders.cached.Loader",
+                    [
+                        "bias_core.extensions.template_loader.ExtensionNamespaceLoader",
+                        "django.template.loaders.filesystem.Loader",
+                        "django.template.loaders.app_directories.Loader",
+                    ],
+                ),
+            ],
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
@@ -88,8 +107,10 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = "config.asgi.application"
 WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+TEST_RUNNER = "bias_core.test_runner.BiasDiscoverRunner"
+WEB_CONCURRENCY = max(1, env_int("WEB_CONCURRENCY", 1))
 
 
 # Database
