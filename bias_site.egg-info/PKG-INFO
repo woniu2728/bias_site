@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: bias-site
+Version: 0.1.0
+Summary: Bias forum site project
+Requires-Python: >=3.11
+Requires-Dist: bias-core<0.2,>=0.1
+Provides-Extra: dev
+Requires-Dist: django-debug-toolbar<4.4,>=4.3; extra == "dev"
+Requires-Dist: ipython<9,>=8.22; extra == "dev"
