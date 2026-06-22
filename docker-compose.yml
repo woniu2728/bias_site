@@ -1,0 +1,207 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: bias_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - bias_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:?DB_USER is required} -d ${DB_NAME:?DB_NAME is required}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bias_redis
+    restart: unless-stopped
+    command: >
+      sh -c 'if [ -n "$$REDIS_PASSWORD" ]; then
+               redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD";
+             else
+               redis-server --appendonly yes;
+             fi'
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    networks:
+      - bias_network
+    healthcheck:
+      test: ["CMD-SHELL", "if [ -n \"$${REDIS_PASSWORD}\" ]; then redis-cli -a \"$${REDIS_PASSWORD}\" ping; else redis-cli ping; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bias_web
+    restart: unless-stopped
+    command: >
+      gunicorn config.asgi:application
+      -k uvicorn.workers.UvicornWorker
+      --bind 0.0.0.0:8000
+      --workers ${WEB_CONCURRENCY:-2}
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    expose:
+      - "8000"
+    environment:
+      - BIAS_SITE_CONFIG=/app/instance/site.json
+      - DB_NAME=${DB_NAME:?DB_NAME is required}
+      - DB_USER=${DB_USER:?DB_USER is required}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT:-5432}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - SECRET_KEY=${SECRET_KEY:-}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8080}
+      - SITE_SCHEME=${SITE_SCHEME:-http}
+      - CSRF_COOKIE_SECURE=${CSRF_COOKIE_SECURE:-0}
+      - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-0}
+      - WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
+      - EMAIL_BACKEND=${EMAIL_BACKEND:-}
+      - EMAIL_HOST=${EMAIL_HOST:-}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
+      - EMAIL_USE_TLS=${EMAIL_USE_TLS:-1}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:8000/api/health\", timeout=5).read()'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - bias_network
+
+  frontend:
+    image: node:20-alpine
+    container_name: bias_frontend
+    restart: unless-stopped
+    working_dir: /app/frontend
+    command: >
+      sh -c "if [ -f package-lock.json ]; then npm ci; else npm install; fi &&
+             npm run build &&
+             tail -f /dev/null"
+    volumes:
+      - .:/app
+      - frontend_node_modules:/app/frontend/node_modules
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /app/frontend/dist/index.html && test -f /app/frontend/dist/admin.html"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - bias_network
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bias_celery
+    restart: unless-stopped
+    profiles:
+      - queue
+    command: >
+      celery -A config worker -l info
+      --concurrency=${CELERY_CONCURRENCY:-2}
+      --max-tasks-per-child=${CELERY_MAX_TASKS_PER_CHILD:-200}
+    volumes:
+      - .:/app
+    environment:
+      - BIAS_SITE_CONFIG=/app/instance/site.json
+      - DB_NAME=${DB_NAME:?DB_NAME is required}
+      - DB_USER=${DB_USER:?DB_USER is required}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT:-5432}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - SECRET_KEY=${SECRET_KEY:-}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8080}
+      - SITE_SCHEME=${SITE_SCHEME:-http}
+      - CSRF_COOKIE_SECURE=${CSRF_COOKIE_SECURE:-0}
+      - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-0}
+      - EMAIL_BACKEND=${EMAIL_BACKEND:-}
+      - EMAIL_HOST=${EMAIL_HOST:-}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
+      - EMAIL_USE_TLS=${EMAIL_USE_TLS:-1}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config inspect ping -d celery@$${HOSTNAME} --timeout=5 | grep -q pong"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - bias_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: bias_nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend/dist:/app/frontend/dist:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      web:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bias_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:
+  frontend_node_modules:
+
+networks:
+  bias_network:
+    driver: bridge
