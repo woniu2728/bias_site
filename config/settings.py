@@ -55,9 +55,15 @@ INSTALLED_APPS = [
 
     # Extensions (discovered through entry points)
     *discover_installed_extension_django_apps(BASE_DIR),
+
+    # TODO: 替换为自动发现
+    "bias_ext_users.backend.apps.UsersExtensionConfig",
 ]
 
-MIGRATION_MODULES = discover_extension_migration_modules(BASE_DIR)
+MIGRATION_MODULES = {
+    **discover_extension_migration_modules(BASE_DIR),
+    "users": "bias_ext_users.backend.django_migrations",
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -137,8 +143,7 @@ else:
     }
 
 
-AUTH_USER_MODEL = "auth.User"
-# TODO: 当 users 扩展可用后改为 AUTH_USER_MODEL = "users.User"
+AUTH_USER_MODEL = "users.User"
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
