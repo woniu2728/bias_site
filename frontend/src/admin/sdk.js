@@ -1,10 +1,18 @@
-/* ══════════════════════════════════════════════════════════════════════════════
- * @bias/admin SDK — 管理后台扩展 API
- * ══════════════════════════════════════════════════════════════════════════════ */
-
-export function registerAdminPage(app, page) {}
-export function registerAdminNavigationEntry(app, entry) {}
-export function registerAdminDashboardWidget(app, widget) {}
-export function registerAdminSettingComponent(app, setting) {}
-
-export default { registerAdminPage, registerAdminNavigationEntry, registerAdminDashboardWidget, registerAdminSettingComponent }
+export {
+  createAdminExtensionApp,
+  getAdminExtensionInitializers,
+  resetAdminExtensionAppRuntime,
+} from './extensionApp.js'
+export {
+  bootstrapEnabledAdminExtensions,
+  getAdminInitializers,
+  resetLoadedAdminExtensions,
+  resetLoadedAdminExtensionsWhenRuntimeChanges,
+} from './extensionBootstrap.js'
+export { adminRuntimeRegistry, createAdminRuntimeRegistry } from './runtimeRegistry.js'
+export {
+  AdminExtender,
+  ExportsExtender,
+  ExportsExtender as Exports,
+  extendAdmin,
+} from '../common/extenders.js'
