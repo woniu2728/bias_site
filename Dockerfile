@@ -11,11 +11,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && gosu --version
 
-# Install Python dependencies（先装 bias-core，再装 site）
+# Install Python dependencies（先装本地 bias-core 和扩展，再装 site）
 COPY pyproject.toml .
-RUN pip install --no-cache-dir bias-core>=0.1,<0.2 \
+COPY bias_core/ /tmp/bias_core/
+COPY bias_ext_users/ /tmp/bias_ext_users/ 2>/dev/null || true
+RUN pip install --no-cache-dir -e /tmp/bias_core \
+    && if [ -d /tmp/bias_ext_users ]; then pip install --no-cache-dir -e /tmp/bias_ext_users; fi \
     && pip install --no-cache-dir -e . \
-    && rm -rf ~/.cache/pip
+    && rm -rf ~/.cache/pip /tmp/*
 
 # Copy project source
 COPY . .
