@@ -167,6 +167,8 @@ services:
       web:
         condition: service_healthy
       # frontend: built locally
+    networks:
+      - bias_network
 volumes:
   postgres_data:
   redis_data:
