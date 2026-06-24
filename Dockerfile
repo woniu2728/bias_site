@@ -10,9 +10,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && gosu --version
 
-# Install bias-core from local wheel
-COPY bias_core-0.1.0-py3-none-any.whl .
-RUN pip install --no-cache-dir bias_core-0.1.0-py3-none-any.whl \
+# Install bias-core from PyPI
+RUN pip install --no-cache-dir bias-core>=0.1,<0.2 \
     && rm -rf ~/.cache/pip
 
 # Copy project source
