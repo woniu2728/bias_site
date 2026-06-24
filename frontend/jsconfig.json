@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@bias/core": [
+        "./src/common/sdk.js"
+      ],
+      "@bias/forum": [
+        "./src/forum/sdk.js"
+      ],
+      "@bias/admin": [
+        "./src/admin/sdk.js"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
