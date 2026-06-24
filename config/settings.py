@@ -53,17 +53,11 @@ INSTALLED_APPS = [
     # Core platform
     "bias_core",
 
-    # Extensions (discovered through entry points)
+    # Extensions (auto-discovered via entry points)
     *discover_installed_extension_django_apps(BASE_DIR),
-
-    # TODO: 替换为自动发现
-    "bias_ext_users.backend.apps.UsersExtensionConfig",
 ]
 
-MIGRATION_MODULES = {
-    **discover_extension_migration_modules(BASE_DIR),
-    "users": "bias_ext_users.backend.django_migrations",
-}
+MIGRATION_MODULES = discover_extension_migration_modules(BASE_DIR)
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
