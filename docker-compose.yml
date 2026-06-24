@@ -99,26 +99,7 @@ services:
     networks:
       - bias_network
 
-  frontend:
-    image: node:20-alpine
-    container_name: bias_frontend
-    restart: unless-stopped
-    working_dir: /app/frontend
-    command: >
-      sh -c "if [ -f package-lock.json ]; then npm ci; else npm install; fi &&
-             npm run build &&
-             tail -f /dev/null"
-    volumes:
-      - .:/app
-      - frontend_node_modules:/app/frontend/node_modules
-    healthcheck:
-      test: ["CMD-SHELL", "test -f /app/frontend/dist/index.html && test -f /app/frontend/dist/admin.html"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-    networks:
-      - bias_network
-
+  # frontend: built locally
   celery:
     build:
       context: .
@@ -185,16 +166,7 @@ services:
     depends_on:
       web:
         condition: service_healthy
-      frontend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-    networks:
-      - bias_network
-
+      # frontend: built locally
 volumes:
   postgres_data:
   redis_data:
@@ -205,3 +177,4 @@ volumes:
 networks:
   bias_network:
     driver: bridge
+

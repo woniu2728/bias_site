@@ -10,17 +10,19 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && gosu --version
 
-# Install bias-core from PyPI
-RUN pip install --no-cache-dir bias-core>=0.1,<0.2 \
+# Install bias-core and extensions from PyPI/local
+RUN pip install --no-cache-dir bias-core==0.1.0 "gunicorn>=22.0" "uvicorn>=0.30" "psycopg2-binary>=2.9" \
     && rm -rf ~/.cache/pip
 
-# Copy project source
+# Copy site package and install
 COPY pyproject.toml .
 COPY config/ config/
 COPY manage.py .
 COPY --chown=1000:1000 . /app
 
-RUN pip install --no-cache-dir -e . && rm -rf ~/.cache/pip
+RUN pip install --no-cache-dir bias-ext-users \
+    && pip install --no-cache-dir -e . \
+    && rm -rf ~/.cache/pip
 
 # Entrypoint
 COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
