@@ -10,9 +10,9 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && gosu --version
 
-# Install bias-core and extensions from PyPI
-RUN pip install --no-cache-dir \
-    bias-core==0.1.0 \
+# Install bias-core from local wheel (includes site_extenders + api_runtime)
+COPY bias_core-0.1.0-py3-none-any.whl .
+RUN pip install --no-cache-dir bias_core-0.1.0-py3-none-any.whl \
     bias-ext-users==0.1.0 \
     "gunicorn>=22.0" "uvicorn>=0.30" "psycopg2-binary>=2.9" \
     && rm -rf ~/.cache/pip

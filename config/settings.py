@@ -167,6 +167,13 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Ninja Extra pagination settings
+NINJA_PAGINATION_CLASS = "ninja_extra.pagination.PageNumberPaginationExtra"
+NINJA_PAGINATION_PER_PAGE = 20
+NINJA_PAGINATION_MAX_LIMIT = 100
+NUM_PROXIES = None
+DEFAULT_THROTTLE_RATES = None
+
 
 # Email
 EMAIL_BACKEND = BOOTSTRAP.email_backend
