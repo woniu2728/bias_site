@@ -5,6 +5,7 @@ Generated from bias-core bootstrap pattern.
 """
 
 from pathlib import Path
+import os
 
 from bias_core.conf.bootstrap import load_site_bootstrap
 from bias_core.conf.extension_discovery import (
@@ -13,6 +14,7 @@ from bias_core.conf.extension_discovery import (
 )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+BIAS_EXTENSION_WORKSPACE_ROOT = BASE_DIR.parent
 BOOTSTRAP = load_site_bootstrap(BASE_DIR)
 
 
