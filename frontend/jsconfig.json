@@ -5,11 +5,32 @@
       "@bias/core": [
         "./src/common/sdk.js"
       ],
+      "@bias/core/common": [
+        "./src/common/sdk.js"
+      ],
+      "@bias/core/forum": [
+        "./src/forum/sdk.js"
+      ],
+      "@bias/core/admin": [
+        "./src/admin/sdk.js"
+      ],
+      "@bias/core/components/admin": [
+        "./src/admin/componentsSdk.js"
+      ],
       "@bias/forum": [
         "./src/forum/sdk.js"
       ],
       "@bias/admin": [
         "./src/admin/sdk.js"
+      ],
+      "@bias/emoji": [
+        "../../bias-ext-emoji/frontend/forum/sdk.js"
+      ],
+      "@bias/realtime": [
+        "../../bias-ext-realtime/frontend/forum/sdk.js"
+      ],
+      "@bias/users": [
+        "../../bias-ext-users/frontend/forum/sdk.js"
       ],
       "@/*": [
         "./src/*"

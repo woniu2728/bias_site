@@ -45,7 +45,7 @@ const extension = ref(null)
 const resolvedComponent = ref(null)
 
 const adminEntryModules = {
-  ...import.meta.glob('../../../../extensions/*/frontend/admin/index.js'),
+  ...import.meta.glob('../../../../bias-ext-*/frontend/admin/index.js'),
   ...generatedAdminExtensionModules,
 }
 

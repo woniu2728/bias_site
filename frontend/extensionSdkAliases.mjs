@@ -1,11 +1,15 @@
 import { existsSync, readdirSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const frontendRoot = dirname(fileURLToPath(import.meta.url))
 
 const browserCoreAliases = [
   ['@bias/core', 'src/common/sdk.js'],
+  ['@bias/core/common', 'src/common/sdk.js'],
+  ['@bias/core/forum', 'src/forum/sdk.js'],
+  ['@bias/core/admin', 'src/admin/sdk.js'],
+  ['@bias/core/components/admin', 'src/admin/componentsSdk.js'],
   ['@bias/admin/components', 'src/admin/componentsSdk.js'],
   ['@bias/admin', 'src/admin/sdk.js'],
   ['@bias/forum', 'src/forum/sdk.js'],
@@ -13,6 +17,10 @@ const browserCoreAliases = [
 
 const nodeCoreAliases = [
   ['@bias/core', 'src/common/sdk.js'],
+  ['@bias/core/common', 'src/common/sdk.js'],
+  ['@bias/core/forum', 'src/forum/nodeSdk.js'],
+  ['@bias/core/admin', 'src/admin/sdk.js'],
+  ['@bias/core/components/admin', 'src/admin/nodeComponentsSdk.js'],
   ['@bias/admin/components', 'src/admin/nodeComponentsSdk.js'],
   ['@bias/admin', 'src/admin/sdk.js'],
   ['@bias/forum', 'src/forum/nodeSdk.js'],
@@ -34,14 +42,16 @@ function discoverExtensionSdks() {
     const sdkPath = resolve(workspace, entry.name, 'frontend', 'forum', 'sdk.js')
     if (existsSync(sdkPath)) {
       results.push(['@bias/' + extId, sdkPath])
-    } else {
-      results.push(['@bias/' + extId, resolve(frontendRoot, 'src/forum/sdk.js')])
     }
   }
   return results
 }
 
 const extensionSdks = discoverExtensionSdks()
+
+export function discoverExtensionSdkAliases() {
+  return extensionSdks.slice()
+}
 
 export function createViteSdkAliases() {
   return Object.fromEntries(createBrowserSdkAliasEntries())
@@ -57,6 +67,23 @@ export function createBrowserSdkAliasEntries() {
 export function createNodeSdkAliasEntries() {
   return [
     ...nodeCoreAliases.map(([alias, target]) => [alias, resolve(frontendRoot, target)]),
-    ...extensionSdks,
+    ...extensionSdks.map(([alias, target]) => {
+      const nodeTarget = resolve(dirname(target), 'nodeSdk.js')
+      return [alias, existsSync(nodeTarget) ? nodeTarget : target]
+    }),
   ]
+}
+
+export function createNodeSdkAliasMap() {
+  return new Map(createNodeSdkAliasEntries())
+}
+
+export function createJsconfigSdkPaths() {
+  const paths = {}
+  for (const [alias, target] of extensionSdks) {
+    const extensionRoot = dirname(dirname(dirname(target)))
+    const extensionDir = basename(extensionRoot)
+    paths[alias] = [`../../${extensionDir}/frontend/forum/sdk.js`]
+  }
+  return paths
 }

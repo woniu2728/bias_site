@@ -1,5 +1,5 @@
 import { writeFileSync } from 'node:fs'
-import { frontendRoot } from '../extensionSdkAliases.mjs'
+import { createJsconfigSdkPaths } from '../extensionSdkAliases.mjs'
 
 // Generate jsconfig.json with SDK alias paths for IDE support
 const jsconfig = {
@@ -7,8 +7,13 @@ const jsconfig = {
     baseUrl: '.',
     paths: {
       '@bias/core': ['./src/common/sdk.js'],
+      '@bias/core/common': ['./src/common/sdk.js'],
+      '@bias/core/forum': ['./src/forum/sdk.js'],
+      '@bias/core/admin': ['./src/admin/sdk.js'],
+      '@bias/core/components/admin': ['./src/admin/componentsSdk.js'],
       '@bias/forum': ['./src/forum/sdk.js'],
       '@bias/admin': ['./src/admin/sdk.js'],
+      ...createJsconfigSdkPaths(),
       '@/*': ['./src/*'],
     },
   },

@@ -6,53 +6,46 @@ import {
   discoverExtensionSdkAliases,
 } from '../../extensionSdkAliases.mjs'
 
-test('public extension SDK aliases are discovered from extension manifests', () => {
+const sdkExtensions = {
+  emoji: true,
+  realtime: true,
+  users: false,
+}
+
+test('public extension SDK aliases are discovered from sibling extension packages', () => {
   const browserAliases = new Map(discoverExtensionSdkAliases())
   const nodeAliases = createNodeSdkAliasMap()
   const jsconfigPaths = createJsconfigSdkPaths()
 
-  // 这些扩展的 nodeSdk.js 已合并删除，node 环境会自动回退到 sdk.js
-  const mergedExtensions = new Set(['approval', 'likes', 'notifications', 'points', 'posts', 'search', 'subscriptions', 'uploads', 'users'])
-  const splitExtensions = new Set(['ai', 'discussions', 'emoji', 'flags', 'mentions', 'realtime', 'security', 'tags'])
-
-  for (const extensionId of [...mergedExtensions, ...splitExtensions]) {
+  for (const [extensionId, hasNodeSdk] of Object.entries(sdkExtensions)) {
     const alias = `@bias/${extensionId}`
-    assert.match(browserAliases.get(alias), new RegExp(`extensions[/\\\\]${extensionId}[/\\\\]frontend[/\\\\]forum[/\\\\]sdk\\.js$`))
-    if (splitExtensions.has(extensionId)) {
-      assert.match(nodeAliases.get(alias), new RegExp(`extensions[/\\\\]${extensionId}[/\\\\]frontend[/\\\\]forum[/\\\\]nodeSdk\\.js$`))
+    assert.match(browserAliases.get(alias), new RegExp(`bias-ext-${extensionId}[/\\\\]frontend[/\\\\]forum[/\\\\]sdk\\.js$`))
+    if (hasNodeSdk) {
+      assert.match(nodeAliases.get(alias), new RegExp(`bias-ext-${extensionId}[/\\\\]frontend[/\\\\]forum[/\\\\]nodeSdk\\.js$`))
     } else {
-      assert.match(nodeAliases.get(alias), new RegExp(`extensions[/\\\\]${extensionId}[/\\\\]frontend[/\\\\]forum[/\\\\]sdk\\.js$`))
+      assert.match(nodeAliases.get(alias), new RegExp(`bias-ext-${extensionId}[/\\\\]frontend[/\\\\]forum[/\\\\]sdk\\.js$`))
     }
-    assert.deepEqual(jsconfigPaths[alias], [`../extensions/${extensionId}/frontend/forum/sdk.js`])
+    assert.deepEqual(jsconfigPaths[alias], [`../../bias-ext-${extensionId}/frontend/forum/sdk.js`])
   }
 
   assert.equal(browserAliases.has('@bias/core'), false)
+  assert.equal(browserAliases.has('@bias/approval'), false)
 })
 
 test('node test runtime resolves public Bias SDK package aliases', async () => {
-  const forum = await import('@bias/forum')
-  const admin = await import('@bias/admin')
-  const adminComponents = await import('@bias/admin/components')
+  const forum = await import('@bias/core/forum')
+  const legacyForum = await import('@bias/forum')
+  const admin = await import('@bias/core/admin')
+  const legacyAdmin = await import('@bias/admin')
+  const adminComponents = await import('@bias/core/components/admin')
+  const legacyAdminComponents = await import('@bias/admin/components')
   const core = await import('@bias/core')
-  const ai = await import('@bias/ai')
-  const approval = await import('@bias/approval')
-  const discussions = await import('@bias/discussions')
   const emoji = await import('@bias/emoji')
-  const flags = await import('@bias/flags')
-  const likes = await import('@bias/likes')
-  const mentions = await import('@bias/mentions')
-  const notifications = await import('@bias/notifications')
-  const points = await import('@bias/points')
-  const posts = await import('@bias/posts')
   const realtime = await import('@bias/realtime')
-  const search = await import('@bias/search')
-  const security = await import('@bias/security')
-  const subscriptions = await import('@bias/subscriptions')
-  const tags = await import('@bias/tags')
-  const uploads = await import('@bias/uploads')
   const users = await import('@bias/users')
 
   assert.equal(typeof forum.extendForum, 'function')
+  assert.equal(typeof legacyForum.extendForum, 'function')
   assert.equal(typeof forum.ForumExtender, 'function')
   assert.equal(forum.ModerationActionModal, null)
   assert.equal(forum.PostTypes, undefined)
@@ -67,12 +60,14 @@ test('node test runtime resolves public Bias SDK package aliases', async () => {
   assert.equal(forum.useResourceStore, undefined)
   assert.equal(forum.useModalStore, undefined)
   assert.equal(typeof admin.extendAdmin, 'function')
+  assert.equal(typeof legacyAdmin.extendAdmin, 'function')
   assert.equal(typeof admin.AdminExtender, 'function')
   assert.equal(typeof admin.createAdminRuntimeRegistry, 'function')
   assert.equal(admin.ref, undefined)
   assert.equal(admin.ItemList, undefined)
   assert.equal(admin.ResourceNormalizer, undefined)
   assert.equal(typeof adminComponents.resolveApprovalSelectionState, 'function')
+  assert.equal(typeof legacyAdminComponents.resolveApprovalSelectionState, 'function')
   assert.equal(adminComponents.ExtensionGeneratedPermissionsPage, null)
   assert.equal(typeof core.extend, 'function')
   assert.equal(typeof core.override, 'function')
@@ -112,49 +107,12 @@ test('node test runtime resolves public Bias SDK package aliases', async () => {
   assert.equal(typeof core.useRoutePagination, 'function')
   assert.equal(typeof core.useModalStore, 'function')
   assert.equal(typeof core.useResourceStore, 'function')
-  assert.equal(discussions.DiscussionEventPostBase, null)
-  assert.equal(typeof discussions.resolveDiscussionDetailMetaPayload, 'function')
-  assert.equal(typeof discussions.buildDiscussionHeroColorStyle, 'function')
-  assert.equal(typeof discussions.buildDiscussionPath, 'function')
-  assert.equal(typeof discussions.normalizeDiscussion, 'function')
-  assert.equal(typeof discussions.useStartDiscussionAction, 'function')
-  assert.equal(typeof discussions.getStartDiscussionProvider, 'function')
-  assert.equal(typeof discussions.registerStartDiscussionProvider, 'function')
   assert.equal(typeof emoji.renderTwemojiHtml, 'function')
   assert.equal(typeof emoji.renderTwemojiText, 'function')
   assert.equal(typeof emoji.searchEmojiItems, 'function')
-  assert.equal(typeof notifications.getNotificationRenderers, 'function')
-  assert.equal(typeof notifications.registerNotificationRenderer, 'function')
-  assert.equal(ai.AiResultCard, null)
-  assert.equal(typeof ai.getAiResultTitle, 'function')
-  assert.equal(typeof ai.formatAiResultMarkdown, 'function')
-  assert.equal(typeof approval.getApprovalComposerState, 'function')
-  assert.equal(flags.PostReportModal, null)
-  assert.equal(typeof flags.buildPostFlagPanel, 'function')
-  assert.equal(typeof likes.buildLikeSummary, 'function')
-  assert.equal(mentions.ComposerMentionAutocomplete, null)
-  assert.equal(typeof mentions.detectMentionQuery, 'function')
-  assert.equal(typeof points.buildUserPointsPath, 'function')
-  assert.equal(typeof points.formatPointsLabel, 'function')
-  assert.equal(typeof posts.normalizePost, 'function')
-  const normalizedPost = posts.normalizePost({
-    content: '正文 <script>alert(1)</script>\n第二行',
-    content_html: '',
-  })
-  assert.equal(normalizedPost.content_html, '正文 &lt;script&gt;alert(1)&lt;/script&gt;<br>第二行')
   assert.equal(typeof realtime.useForumRealtimeStore, 'function')
   assert.equal(typeof realtime.shouldRefreshForumEvent, 'function')
   assert.equal(typeof realtime.getTrackedDiscussionIdsFromDiscussionItems, 'function')
-  assert.equal(typeof search.highlightSearchText, 'function')
-  assert.equal(typeof search.resolveSearchMetaPayload, 'function')
-  assert.equal(typeof search.useSearchFilterCatalog, 'function')
-  assert.equal(security.TurnstileChallenge, null)
-  assert.equal(typeof security.shouldUseTurnstile, 'function')
-  assert.equal(typeof subscriptions.isDiscussionSubscribed, 'function')
-  assert.equal(tags.TagBadge, null)
-  assert.equal(typeof tags.buildTagPath, 'function')
-  assert.equal(typeof tags.normalizeTag, 'function')
-  assert.equal(typeof uploads.buildUploadedFileMarkdown, 'function')
   assert.equal(typeof users.resolveProfileMetaPayload, 'function')
   assert.equal(typeof users.getUserPrimaryGroupLabel, 'function')
   assert.equal(typeof users.buildUserPath, 'function')

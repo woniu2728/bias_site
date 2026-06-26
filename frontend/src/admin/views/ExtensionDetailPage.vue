@@ -202,7 +202,7 @@ const settingsComponent = ref(null)
 const permissionsComponent = ref(null)
 
 const adminEntryModules = {
-  ...import.meta.glob('../../../../extensions/*/frontend/admin/index.js'),
+  ...import.meta.glob('../../../../bias-ext-*/frontend/admin/index.js'),
   ...generatedAdminExtensionModules,
 }
 

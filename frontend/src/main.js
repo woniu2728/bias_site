@@ -24,7 +24,7 @@ primeCsrfProtection().catch(() => {})
 const forumStore = useForumStore(pinia)
 const resourceStore = useResourceStore(pinia)
 const forumExtensionModules = {
-  ...import.meta.glob('../../extensions/*/frontend/forum/index.js'),
+  ...import.meta.glob('../../bias-ext-*/frontend/forum/index.js'),
   ...generatedForumExtensionModules,
 }
 useForumUiStore(pinia)

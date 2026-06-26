@@ -6,8 +6,10 @@ import { fileURLToPath } from 'node:url'
 import { discoverExtensionSdkAliases } from '../../extensionSdkAliases.mjs'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
-const extensionRoot = resolve(repoRoot, 'extensions')
+const workspaceRoot = resolve(repoRoot, '..')
+const extensionRoot = workspaceRoot
 const allowedPublicPackageImports = new Set([
+  '@bias/core/forum',
   '@bias/forum',
   '@bias/admin',
   '@bias/admin/components',
@@ -46,11 +48,11 @@ function extractImports(source) {
 }
 
 function readExtensionForumSource(extensionId) {
-  return readFileSync(resolve(extensionRoot, `${extensionId}/frontend/forum/index.js`), 'utf8')
+  return readFileSync(resolve(extensionRoot, `bias-ext-${extensionId}/frontend/forum/index.js`), 'utf8')
 }
 
 function readExtensionForumFileSource(extensionId, file) {
-  return readFileSync(resolve(extensionRoot, `${extensionId}/frontend/forum/${file}`), 'utf8')
+  return readFileSync(resolve(extensionRoot, `bias-ext-${extensionId}/frontend/forum/${file}`), 'utf8')
 }
 
 function assertCoreRegistryDoesNotOwn(keys) {
@@ -152,7 +154,7 @@ test('admin sdk does not expose core runtime facade', () => {
 })
 
 test('users auth APIs are owned by users sdk instead of forum or admin facades', () => {
-  const usersSdkSource = readFileSync(resolve(repoRoot, 'extensions/users/frontend/forum/sdk.js'), 'utf8')
+  const usersSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-users/frontend/forum/sdk.js'), 'utf8')
   const forumSdkSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/sdk.js'), 'utf8')
   const forumNodeSdkSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/nodeSdk.js'), 'utf8')
   const forumTypesSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/sdk.d.ts'), 'utf8')
@@ -178,7 +180,7 @@ test('users auth APIs are owned by users sdk instead of forum or admin facades',
 })
 
 test('realtime APIs are owned by realtime sdk instead of forum facade', () => {
-  const realtimeSdkSource = readFileSync(resolve(repoRoot, 'extensions/realtime/frontend/forum/sdk.js'), 'utf8')
+  const realtimeSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-realtime/frontend/forum/sdk.js'), 'utf8')
   const forumSdkSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/sdk.js'), 'utf8')
   const forumNodeSdkSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/nodeSdk.js'), 'utf8')
   const forumTypesSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/sdk.d.ts'), 'utf8')
@@ -198,7 +200,7 @@ test('realtime APIs are owned by realtime sdk instead of forum facade', () => {
 })
 
 test('emoji rendering APIs are owned by emoji sdk instead of forum facade', () => {
-  const emojiSdkSource = readFileSync(resolve(repoRoot, 'extensions/emoji/frontend/forum/sdk.js'), 'utf8')
+  const emojiSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-emoji/frontend/forum/sdk.js'), 'utf8')
   const forumSdkSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/sdk.js'), 'utf8')
   const forumNodeSdkSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/nodeSdk.js'), 'utf8')
   const forumTypesSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/sdk.d.ts'), 'utf8')
@@ -236,7 +238,7 @@ test('extensions import core runtime primitives from core sdk', () => {
     'useResourceStore',
   ])
   const offenders = []
-  const importPattern = /import\s*\{([^{}]*)\}\s*from\s*['"]@bias\/forum['"];?/g
+  const importPattern = /import\s*\{([^{}]*)\}\s*from\s*['"]@bias\/core\/forum['"];?/g
 
   for (const path of listFrontendFiles(extensionRoot)) {
     const source = readFileSync(path, 'utf8')
@@ -245,7 +247,7 @@ test('extensions import core runtime primitives from core sdk', () => {
       for (const specifier of match[1].split(',').map(item => item.trim()).filter(Boolean)) {
         const importedName = specifier.match(/^([^\s]+)\s+as\s+[^\s]+$/)?.[1] || specifier
         if (coreRuntimeNames.has(importedName)) {
-          offenders.push(`${relative(repoRoot, path)} imports ${specifier} from @bias/forum`)
+          offenders.push(`${relative(repoRoot, path)} imports ${specifier} from @bias/core/forum`)
         }
       }
       match = importPattern.exec(source)
@@ -288,7 +290,7 @@ test('extensions import discussion and post runtime APIs from owning extension s
     'runPostAction',
   ])
   const offenders = []
-  const importPattern = /import\s*\{([^{}]*)\}\s*from\s*['"]@bias\/forum['"];?/g
+  const importPattern = /import\s*\{([^{}]*)\}\s*from\s*['"]@bias\/core\/forum['"];?/g
 
   for (const path of listFrontendFiles(extensionRoot)) {
     const source = readFileSync(path, 'utf8')
@@ -297,7 +299,7 @@ test('extensions import discussion and post runtime APIs from owning extension s
       for (const specifier of match[1].split(',').map(item => item.trim()).filter(Boolean)) {
         const importedName = specifier.match(/^([^\s]+)\s+as\s+[^\s]+$/)?.[1] || specifier
         if (forumOwnedRuntimeNames.has(importedName)) {
-          offenders.push(`${relative(repoRoot, path)} imports ${specifier} from @bias/forum`)
+          offenders.push(`${relative(repoRoot, path)} imports ${specifier} from @bias/core/forum`)
         }
       }
       match = importPattern.exec(source)
@@ -358,16 +360,16 @@ test('forum public sdk does not export discussion and post runtime APIs', () => 
 
 test('discussion and post sdks own their runtime exports', () => {
   const sources = [
-    readFileSync(resolve(repoRoot, 'extensions/discussions/frontend/forum/sdk.js'), 'utf8'),
-    readFileSync(resolve(repoRoot, 'extensions/discussions/frontend/forum/nodeSdk.js'), 'utf8'),
-    readFileSync(resolve(repoRoot, 'extensions/posts/frontend/forum/sdk.js'), 'utf8'),
-    readFileSync(resolve(repoRoot, 'extensions/posts/frontend/forum/sdk.js'), 'utf8'),
+    readFileSync(resolve(extensionRoot, 'bias-ext-discussions/frontend/forum/sdk.js'), 'utf8'),
+    readFileSync(resolve(extensionRoot, 'bias-ext-discussions/frontend/forum/nodeSdk.js'), 'utf8'),
+    readFileSync(resolve(extensionRoot, 'bias-ext-posts/frontend/forum/sdk.js'), 'utf8'),
+    readFileSync(resolve(extensionRoot, 'bias-ext-posts/frontend/forum/sdk.js'), 'utf8'),
     // posts 已合并 — nodeSdk.js 已删除，sdk.js 同时用作浏览器和 Node 入口
   ]
 
   assert.deepEqual(
     sources
-      .map(source => source.includes('@bias/forum'))
+      .map(source => source.includes('@bias/core/forum'))
       .filter(Boolean),
     []
   )
@@ -399,7 +401,7 @@ test('feature runtime APIs are owned by their extension sdks instead of forum', 
     'unwrapList',
   ])
   const offenders = []
-  const importPattern = /import\s*\{([^{}]*)\}\s*from\s*['"]@bias\/forum['"];?/g
+  const importPattern = /import\s*\{([^{}]*)\}\s*from\s*['"]@bias\/core\/forum['"];?/g
 
   for (const path of listFrontendFiles(extensionRoot)) {
     const source = readFileSync(path, 'utf8')
@@ -408,7 +410,7 @@ test('feature runtime APIs are owned by their extension sdks instead of forum', 
       for (const specifier of match[1].split(',').map(item => item.trim()).filter(Boolean)) {
         const importedName = specifier.match(/^([^\s]+)\s+as\s+[^\s]+$/)?.[1] || specifier
         if (forumRuntimeNames.has(importedName)) {
-          offenders.push(`${relative(repoRoot, path)} imports ${specifier} from @bias/forum`)
+          offenders.push(`${relative(repoRoot, path)} imports ${specifier} from @bias/core/forum`)
         }
       }
       match = importPattern.exec(source)
@@ -464,11 +466,11 @@ test('forum public sdk does not export feature-owned runtime APIs', () => {
 })
 
 test('feature sdks expose their owned runtime APIs', () => {
-  const notificationsSdk = readFileSync(resolve(repoRoot, 'extensions/notifications/frontend/forum/sdk.js'), 'utf8')
-  const searchSdk = readFileSync(resolve(repoRoot, 'extensions/search/frontend/forum/sdk.js'), 'utf8')
-  const usersSdk = readFileSync(resolve(repoRoot, 'extensions/users/frontend/forum/sdk.js'), 'utf8')
-  const realtimeSdk = readFileSync(resolve(repoRoot, 'extensions/realtime/frontend/forum/sdk.js'), 'utf8')
-  const discussionsSdk = readFileSync(resolve(repoRoot, 'extensions/discussions/frontend/forum/sdk.js'), 'utf8')
+  const notificationsSdk = readFileSync(resolve(extensionRoot, 'bias-ext-notifications/frontend/forum/sdk.js'), 'utf8')
+  const searchSdk = readFileSync(resolve(extensionRoot, 'bias-ext-search/frontend/forum/sdk.js'), 'utf8')
+  const usersSdk = readFileSync(resolve(extensionRoot, 'bias-ext-users/frontend/forum/sdk.js'), 'utf8')
+  const realtimeSdk = readFileSync(resolve(extensionRoot, 'bias-ext-realtime/frontend/forum/sdk.js'), 'utf8')
+  const discussionsSdk = readFileSync(resolve(extensionRoot, 'bias-ext-discussions/frontend/forum/sdk.js'), 'utf8')
 
   for (const symbol of ['getNotificationRenderers', 'registerNotificationRenderer']) {
     assert.equal(notificationsSdk.includes(symbol), true, symbol)
@@ -489,11 +491,11 @@ test('feature sdks expose their owned runtime APIs', () => {
 
 test('ai and points expose reusable runtime APIs through their owning sdks', () => {
   const forumSdkSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/sdk.js'), 'utf8')
-  const aiSdkSource = readFileSync(resolve(extensionRoot, 'ai/frontend/forum/sdk.js'), 'utf8')
-  const aiRuntimeSource = readFileSync(resolve(extensionRoot, 'ai/frontend/forum/aiRuntime.js'), 'utf8')
+  const aiSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-ai/frontend/forum/sdk.js'), 'utf8')
+  const aiRuntimeSource = readFileSync(resolve(extensionRoot, 'bias-ext-ai/frontend/forum/aiRuntime.js'), 'utf8')
   const aiPanelSource = readExtensionForumFileSource('ai', 'AiAssistantPanel.vue')
-  const pointsSdkSource = readFileSync(resolve(extensionRoot, 'points/frontend/forum/sdk.js'), 'utf8')
-  const pointsRuntimeSource = readFileSync(resolve(extensionRoot, 'points/frontend/forum/pointsRuntime.js'), 'utf8')
+  const pointsSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-points/frontend/forum/sdk.js'), 'utf8')
+  const pointsRuntimeSource = readFileSync(resolve(extensionRoot, 'bias-ext-points/frontend/forum/pointsRuntime.js'), 'utf8')
   const pointsForumSource = readExtensionForumSource('points')
 
   for (const symbol of [
@@ -526,16 +528,16 @@ test('ai and points expose reusable runtime APIs through their owning sdks', () 
 
 test('other extension sdks expose their owned runtime APIs through their owning sdks', () => {
   const forumSdkSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/sdk.js'), 'utf8')
-  const approvalSdkSource = readFileSync(resolve(extensionRoot, 'approval/frontend/forum/sdk.js'), 'utf8')
-  const flagsSdkSource = readFileSync(resolve(extensionRoot, 'flags/frontend/forum/sdk.js'), 'utf8')
-  const flagsNodeSdkSource = readFileSync(resolve(extensionRoot, 'flags/frontend/forum/nodeSdk.js'), 'utf8')
-  const likesSdkSource = readFileSync(resolve(extensionRoot, 'likes/frontend/forum/sdk.js'), 'utf8')
-  const mentionsSdkSource = readFileSync(resolve(extensionRoot, 'mentions/frontend/forum/sdk.js'), 'utf8')
-  const uploadsSdkSource = readFileSync(resolve(extensionRoot, 'uploads/frontend/forum/sdk.js'), 'utf8')
-  const securitySdkSource = readFileSync(resolve(extensionRoot, 'security/frontend/forum/sdk.js'), 'utf8')
-  const subscriptionsSdkSource = readFileSync(resolve(extensionRoot, 'subscriptions/frontend/forum/sdk.js'), 'utf8')
-  const tagsSdkSource = readFileSync(resolve(extensionRoot, 'tags/frontend/forum/sdk.js'), 'utf8')
-  const tagsNodeSdkSource = readFileSync(resolve(extensionRoot, 'tags/frontend/forum/nodeSdk.js'), 'utf8')
+  const approvalSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-approval/frontend/forum/sdk.js'), 'utf8')
+  const flagsSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-flags/frontend/forum/sdk.js'), 'utf8')
+  const flagsNodeSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-flags/frontend/forum/nodeSdk.js'), 'utf8')
+  const likesSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-likes/frontend/forum/sdk.js'), 'utf8')
+  const mentionsSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-mentions/frontend/forum/sdk.js'), 'utf8')
+  const uploadsSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-uploads/frontend/forum/sdk.js'), 'utf8')
+  const securitySdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-security/frontend/forum/sdk.js'), 'utf8')
+  const subscriptionsSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-subscriptions/frontend/forum/sdk.js'), 'utf8')
+  const tagsSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-tags/frontend/forum/sdk.js'), 'utf8')
+  const tagsNodeSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-tags/frontend/forum/nodeSdk.js'), 'utf8')
 
   for (const symbol of ['getApprovalComposerState']) {
     assert.equal(approvalSdkSource.includes(symbol), true, symbol)
