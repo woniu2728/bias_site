@@ -13,3 +13,5 @@ logs/
 .env
 node_modules/
 frontend/dist/
+wheels/*.whl
+!wheels/.gitkeep

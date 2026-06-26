@@ -50,6 +50,22 @@ export {
   getFrontendRegistrySlots,
 } from './frontendRegistrySlots.js'
 export {
+  applyTheme,
+  bootstrapThemeRuntime,
+  getActiveTheme,
+  loadThemeManifest,
+} from '../theme/themeRuntime.js'
+export {
+  clearThemeSlots,
+  getThemeSlot,
+  getThemeSlots,
+  registerThemeSlot,
+} from '../theme/themeSlots.js'
+export {
+  defaultThemeTokens,
+  normalizeThemeTokens,
+} from '../theme/tokens.js'
+export {
   ResourceModel,
   normalizeModelData,
 } from './resourceModel.js'

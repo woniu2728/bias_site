@@ -18,6 +18,7 @@ fi
 
 # Create instance directory
 mkdir -p instance
+mkdir -p wheels
 
 # Copy .env if not exists
 if [ ! -f .env ]; then
@@ -26,7 +27,15 @@ if [ ! -f .env ]; then
 fi
 
 # Build and start
+rm -f wheels/*.whl
+python -m build --wheel --no-isolation ../bias_core -o wheels
+for extension_dir in ../bias-ext-*; do
+    [ -d "$extension_dir" ] || continue
+    python -m build --wheel --no-isolation "$extension_dir" -o wheels
+done
 docker compose up -d --build
+docker compose exec -T web python manage.py install_forum --skip-migrate --skip-collectstatic
+docker compose exec -T web python manage.py doctor
 
 echo ""
 echo "=== Installation Complete ==="

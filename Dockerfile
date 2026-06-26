@@ -10,10 +10,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && gosu --version
 
-# Install bias-core from local wheel (includes site_extenders + api_runtime)
-COPY bias_core-0.1.1-py3-none-any.whl .
-RUN pip install --no-cache-dir bias_core-0.1.1-py3-none-any.whl \
-    bias-ext-users==0.1.0 \
+# Install runtime dependencies. Put bias-core and bias-ext-* wheels under
+# ./wheels before building a release image to install the split packages.
+COPY wheels/ /tmp/bias-wheels/
+RUN if ls /tmp/bias-wheels/*.whl >/dev/null 2>&1; then \
+      pip install --no-cache-dir /tmp/bias-wheels/*.whl; \
+    fi \
+    && pip install --no-cache-dir \
     "gunicorn>=22.0" "uvicorn>=0.30" "psycopg2-binary>=2.9" \
     && rm -rf ~/.cache/pip
 

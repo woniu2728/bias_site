@@ -10,6 +10,12 @@ export {
   resetForumExtensionAppRuntime,
 } from './extensionApp.js'
 export {
+  clearThemeSlots,
+  getThemeSlot,
+  getThemeSlots,
+  registerThemeSlot,
+} from '../theme/themeSlots.js'
+export {
   ForumExtender,
   extendForum,
 } from '../common/extenders.js'

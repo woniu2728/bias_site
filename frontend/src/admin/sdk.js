@@ -4,6 +4,12 @@ export {
   resetAdminExtensionAppRuntime,
 } from './extensionApp.js'
 export {
+  clearThemeSlots,
+  getThemeSlot,
+  getThemeSlots,
+  registerThemeSlot,
+} from '../theme/themeSlots.js'
+export {
   bootstrapEnabledAdminExtensions,
   getAdminInitializers,
   resetLoadedAdminExtensions,
