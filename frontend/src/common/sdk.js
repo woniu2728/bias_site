@@ -51,6 +51,7 @@ export {
 } from './frontendRegistrySlots.js'
 export {
   applyTheme,
+  applyThemeHeadTags,
   bootstrapThemeRuntime,
   getActiveTheme,
   loadThemeManifest,

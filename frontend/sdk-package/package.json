@@ -1,0 +1,20 @@
+{
+  "name": "@bias/core",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Bias frontend extension SDK boundary.",
+  "peerDependencies": {
+    "axios": "^1.6.7",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0"
+  },
+  "exports": {
+    ".": "./common.js",
+    "./common": "./common.js",
+    "./forum": "./forum.js",
+    "./admin": "./admin.js",
+    "./components/admin": "./components-admin.js"
+  }
+}
