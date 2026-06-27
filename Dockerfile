@@ -17,7 +17,7 @@ RUN if ls /tmp/bias-wheels/*.whl >/dev/null 2>&1; then \
       pip install --no-cache-dir /tmp/bias-wheels/*.whl; \
     fi \
     && pip install --no-cache-dir \
-    "gunicorn>=22.0" "uvicorn>=0.30" "psycopg2-binary>=2.9" \
+    "gunicorn>=22.0" "uvicorn>=0.30" "websockets>=12.0,<13" "psycopg2-binary>=2.9" \
     && rm -rf ~/.cache/pip
 
 # Copy site package and install
