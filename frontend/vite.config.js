@@ -9,7 +9,6 @@ export default defineConfig({
   resolve: {
     alias: {
       'vue': fileURLToPath(new URL('./node_modules/vue/dist/vue.esm-bundler.js', import.meta.url)),
-      'vue-router': fileURLToPath(new URL('./node_modules/vue-router/dist/vue-router.esm-bundler.js', import.meta.url)),
       'pinia': fileURLToPath(new URL('./node_modules/pinia/dist/pinia.mjs', import.meta.url)),
       'axios': fileURLToPath(new URL('./node_modules/axios/index.js', import.meta.url)),
       '@': fileURLToPath(new URL('./src', import.meta.url)),
