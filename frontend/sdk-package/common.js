@@ -1,1 +1,1 @@
-export * from '../src/common/sdk.js'
+export * from './src/common/sdk.js'

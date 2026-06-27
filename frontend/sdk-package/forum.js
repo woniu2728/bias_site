@@ -1,1 +1,1 @@
-export * from '../src/forum/sdk.js'
+export * from './src/forum/sdk.js'

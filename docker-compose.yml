@@ -71,6 +71,8 @@ services:
       - REDIS_PORT=6379
       - REDIS_DB=0
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/1}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
       - SECRET_KEY=${SECRET_KEY:-}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8080}
@@ -125,6 +127,8 @@ services:
       - REDIS_PORT=6379
       - REDIS_DB=0
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/1}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
       - SECRET_KEY=${SECRET_KEY:-}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8080}
@@ -179,4 +183,3 @@ volumes:
 networks:
   bias_network:
     driver: bridge
-

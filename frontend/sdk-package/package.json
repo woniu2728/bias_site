@@ -1,9 +1,19 @@
 {
   "name": "@bias/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
-  "private": true,
-  "description": "Bias frontend extension SDK boundary.",
+  "private": false,
+  "description": "Bias frontend extension SDK.",
+  "files": [
+    "src",
+    "common.js",
+    "forum.js",
+    "forum-node.js",
+    "admin.js",
+    "components-admin.js",
+    "components-admin-node.js",
+    "*.d.ts"
+  ],
   "peerDependencies": {
     "axios": "^1.6.7",
     "pinia": "^2.1.7",
@@ -11,10 +21,27 @@
     "vue-router": "^4.3.0"
   },
   "exports": {
-    ".": "./common.js",
-    "./common": "./common.js",
-    "./forum": "./forum.js",
-    "./admin": "./admin.js",
-    "./components/admin": "./components-admin.js"
+    ".": {
+      "types": "./common.d.ts",
+      "default": "./common.js"
+    },
+    "./common": {
+      "types": "./common.d.ts",
+      "default": "./common.js"
+    },
+    "./forum": {
+      "node": "./forum-node.js",
+      "types": "./forum.d.ts",
+      "default": "./forum.js"
+    },
+    "./admin": {
+      "types": "./admin.d.ts",
+      "default": "./admin.js"
+    },
+    "./components/admin": {
+      "node": "./components-admin-node.js",
+      "types": "./components-admin.d.ts",
+      "default": "./components-admin.js"
+    }
   }
 }

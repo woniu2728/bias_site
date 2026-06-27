@@ -1,1 +1,1 @@
-export * from '../src/admin/sdk.js'
+export * from './src/admin/sdk.js'

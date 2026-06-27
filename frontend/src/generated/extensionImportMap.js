@@ -32,8 +32,6 @@ export const generatedAdminExtensionModules = {
 }
 
 export const generatedForumExtensionModules = {
-  "../../../extensions/ai/frontend/forum/index.js": () => import("../../../extensions/ai/frontend/forum/index.js"),
-  "ai": () => import("../../../extensions/ai/frontend/forum/index.js"),
   "../../../extensions/approval/frontend/forum/index.js": () => import("../../../extensions/approval/frontend/forum/index.js"),
   "approval": () => import("../../../extensions/approval/frontend/forum/index.js"),
   "../../../extensions/discussions/frontend/forum/index.js": () => import("../../../extensions/discussions/frontend/forum/index.js"),

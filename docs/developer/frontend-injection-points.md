@@ -39,20 +39,20 @@
 2. 页面差异优先靠 `surfaces` 区分。
 3. 条件展示优先走 `isVisible(context)`。
 4. 新增注入点同步补 Node 测试。
-5. 扩展前端只导入 `@bias/forum`、`@bias/admin`、`@bias/admin/components` 或 `@bias/core`，不要穿透引用 `frontend/src`。
+5. 扩展前端只导入 `@bias/core/forum`、`@bias/core/admin`、`@bias/core/components/admin`、`@bias/core` 或扩展自己的 `@bias/<extension-id>` SDK，不要穿透引用 `frontend/src`。
 
 ## 公共前端 SDK
 
 扩展入口可以使用公共 SDK：
 
-- `@bias/forum`
-  前台扩展入口。包含 `extendForum`、`ForumExtender`、`Routes`、`Search`、`Notification`、`PostTypes`、`Exports`、Vue runtime helper、路由 helper、资源 store helper、`ModerationActionModal` 等通用组件导出。
-- `@bias/admin`
-  后台扩展入口。包含 `extendAdmin`、`AdminExtender`、`Routes`、`Exports`、后台 runtime registry 和通用扩展能力。
-- `@bias/admin/components`
+- `@bias/core/forum`
+  前台扩展入口。包含 `extendForum`、`ForumExtender` 和前台注入声明能力。
+- `@bias/core/admin`
+  后台扩展入口。包含 `extendAdmin`、`AdminExtender`、`Exports` 和后台注入声明能力。
+- `@bias/core/components/admin`
   后台页面可复用组件和页面状态 helper。
 - `@bias/core`
-  前后台共享扩展运行时。包含 `ItemList`、`extend`、`override`、`resetPatches`、`createExtensionInitializers`、`createExtensionPatcher`、`ExportRegistry`、`ResourceModel`、`Model`、`Store` 等底层能力。
+  前后台共享扩展开发 API。包含 Vue/Pinia helper、`api`、`ItemList`、`extend`、`override`、`resetPatches`、registry helper、`ResourceModel`、`Model`、`Store`、`ResourceNormalizer`、分页状态和格式化工具等能力；不暴露宿主启动、export registry 或扩展模块加载运行时。
 
 优先使用 `extendForum(...)` / `extendAdmin(...)` 声明注入点。只有当现有注入点无法表达“扩展一个核心对象方法”时，才使用 `extend()` 或 `override()`。
 
@@ -95,7 +95,7 @@ export const extend = [{
 - `extend(target, method, callback)` 保留原方法返回值，并把返回值传给 callback 做追加修改。
 - `override(target, method, callback)` 接收 `original` 函数，适合替换行为。
 - `ItemList` 用于 key + priority 的有序列表组合，扩展列表项必须有稳定 key。
-- 字符串 target 会按公共 export registry 延迟解析；扩展禁用或 runtime 重载时，未触发的 lazy patch 会被取消，已触发的 patch 会按扩展 id 还原。
+- `@bias/core` 导出的 `extend()` / `override()` 只处理已拿到的对象；扩展生命周期里的 `app.extend()` / `app.override()` 额外支持字符串 target，会按宿主 export registry 延迟解析。扩展禁用或 runtime 重载时，未触发的 lazy patch 会被取消，已触发的 patch 会按扩展 id 还原。
 - patch 能力必须放在扩展生命周期里，不要在模块顶层直接修改核心对象。
 
 ## 路线图对应关系

@@ -1,1 +1,1 @@
-export * from '../src/admin/componentsSdk.js'
+export * from './src/admin/componentsSdk.js'

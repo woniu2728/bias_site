@@ -6,13 +6,6 @@ const jsconfig = {
   compilerOptions: {
     baseUrl: '.',
     paths: {
-      '@bias/core': ['./src/common/sdk.js'],
-      '@bias/core/common': ['./src/common/sdk.js'],
-      '@bias/core/forum': ['./src/forum/sdk.js'],
-      '@bias/core/admin': ['./src/admin/sdk.js'],
-      '@bias/core/components/admin': ['./src/admin/componentsSdk.js'],
-      '@bias/forum': ['./src/forum/sdk.js'],
-      '@bias/admin': ['./src/admin/sdk.js'],
       ...createJsconfigSdkPaths(),
       '@/*': ['./src/*'],
     },

@@ -93,6 +93,9 @@ finally {
 }
 
 if ($BuildFrontend) {
+    Step "Check synced extension frontend sources"
+    Run "npm run check:extension-sources" (Join-Path $SiteRoot "frontend")
+
     Step "Build site frontend"
     Run "npm install; npm run build" (Join-Path $SiteRoot "frontend")
 }

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, resolve, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { discoverExtensionSdkAliases } from '../../extensionSdkAliases.mjs'
@@ -8,11 +8,11 @@ import { discoverExtensionSdkAliases } from '../../extensionSdkAliases.mjs'
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 const workspaceRoot = resolve(repoRoot, '..')
 const extensionRoot = workspaceRoot
+const extensionPackageRoots = discoverExtensionPackageRoots()
 const allowedPublicPackageImports = new Set([
   '@bias/core/forum',
-  '@bias/forum',
-  '@bias/admin',
-  '@bias/admin/components',
+  '@bias/core/admin',
+  '@bias/core/components/admin',
   '@bias/core',
   ...discoverExtensionSdkAliases().map(([alias]) => alias),
 ])
@@ -31,6 +31,22 @@ function listFrontendFiles(directory) {
     }
   }
   return output
+}
+
+function discoverExtensionPackageRoots() {
+  return readdirSync(workspaceRoot, { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && /^bias-ext-/.test(entry.name))
+    .map(entry => resolve(workspaceRoot, entry.name))
+    .filter(path => existsSync(resolve(path, 'frontend')))
+    .sort()
+}
+
+function listExtensionFrontendFiles() {
+  return extensionPackageRoots.flatMap(root => listFrontendFiles(resolve(root, 'frontend')))
+}
+
+function hasExtension(extensionId) {
+  return existsSync(resolve(extensionRoot, `bias-ext-${extensionId}`, 'frontend'))
 }
 
 function extractImports(source) {
@@ -71,7 +87,7 @@ function assertCorePostTypesDoesNotOwn(keys) {
 
 test('extension frontend imports only public app APIs', () => {
   const offenders = []
-  for (const path of listFrontendFiles(extensionRoot)) {
+  for (const path of listExtensionFrontendFiles()) {
     const source = readFileSync(path, 'utf8')
     for (const importPath of extractImports(source)) {
       if (allowedPublicPackageImports.has(importPath)) {
@@ -490,6 +506,9 @@ test('feature sdks expose their owned runtime APIs', () => {
 })
 
 test('ai and points expose reusable runtime APIs through their owning sdks', () => {
+  if (!hasExtension('ai')) {
+    return
+  }
   const forumSdkSource = readFileSync(resolve(repoRoot, 'frontend/src/forum/sdk.js'), 'utf8')
   const aiSdkSource = readFileSync(resolve(extensionRoot, 'bias-ext-ai/frontend/forum/sdk.js'), 'utf8')
   const aiRuntimeSource = readFileSync(resolve(extensionRoot, 'bias-ext-ai/frontend/forum/aiRuntime.js'), 'utf8')
@@ -697,6 +716,17 @@ test('tags and notifications extensions own navigational forum contributions', (
   assert.equal(forumSdkSource.includes('registerResourceNormalizer'), false)
 })
 
+test('forum registry state is shared with the packaged core sdk', () => {
+  const frontendRegistrySource = readFileSync(resolve(repoRoot, 'frontend/src/forum/frontendRegistry.js'), 'utf8')
+  const registrySlotsSource = readFileSync(resolve(repoRoot, 'frontend/src/common/frontendRegistrySlots.js'), 'utf8')
+
+  assert.equal(frontendRegistrySource.includes("getFrontendRegistrySlot('forum.navItems')"), true)
+  assert.equal(frontendRegistrySource.includes("getFrontendRegistrySlot('forum.sidebarSections')"), true)
+  assert.equal(frontendRegistrySource.includes('const forumNavItems = []'), false)
+  assert.equal(frontendRegistrySource.includes('const forumSidebarSections = []'), false)
+  assert.equal(registrySlotsSource.includes('__biasFrontendRegistrySlots'), true)
+})
+
 test('core resource modules declare normalizers through ResourceNormalizer extender', () => {
   for (const extensionId of ['users', 'posts', 'discussions']) {
     const source = readExtensionForumSource(extensionId)
@@ -814,7 +844,7 @@ test('approval flags subscriptions and likes own interaction contributions', () 
 
 test('extension frontend contributions do not claim core module ownership', () => {
   const offenders = []
-  for (const path of listFrontendFiles(extensionRoot)) {
+  for (const path of listExtensionFrontendFiles()) {
     const source = readFileSync(path, 'utf8')
     if (/\bmoduleId\s*:\s*['"]core['"]/.test(source)) {
       offenders.push(relative(repoRoot, path))

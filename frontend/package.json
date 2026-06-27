@@ -4,14 +4,23 @@
   "description": "Bias Site Frontend - Vue 3 Application",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "sdk-package"
+  ],
   "scripts": {
     "dev": "vite",
-    "predev": "npm run sync:sdk-aliases",
+    "predev": "npm run sync:extension-sources && npm run sync:sdk-package && npm run sync:sdk-aliases",
     "build": "vite build",
-    "prebuild": "npm run sync:sdk-aliases",
-    "sync:sdk-aliases": "node ./scripts/syncSdkAliases.mjs"
+    "prebuild": "npm run sync:extension-sources && npm run sync:sdk-package && npm run sync:sdk-aliases",
+    "sync:extension-sources": "node ./scripts/syncExtensionSources.mjs",
+    "check:extension-sources": "node ./scripts/syncExtensionSources.mjs --check",
+    "sync:sdk-package": "node ./scripts/syncSdkPackageSources.mjs",
+    "check:sdk-package-sources": "node ./scripts/syncSdkPackageSources.mjs --check",
+    "sync:sdk-aliases": "node ./scripts/syncSdkAliases.mjs",
+    "check:sdk-package": "npm run check:sdk-package-sources && node ./scripts/checkSdkPackage.mjs && npm pack --dry-run --workspace @bias/core"
   },
   "dependencies": {
+    "@bias/core": "file:./sdk-package",
     "@fortawesome/fontawesome-free": "^7.2.0",
     "@twemoji/api": "^17.0.3",
     "axios": "^1.6.7",
